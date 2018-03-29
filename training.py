@@ -2,10 +2,11 @@ import tensorflow as tf
 import numpy as np
 
 def MinMaxScaler(data):
-    numerator = data - np.min(data, 0)
-    denominator = np.max(data, 0) - np.min(data, 0)
+    scale=  [ 1.,        200.,         200.,       200.,       200.,
+    100.,   10000.  ,10000.    ]
+    print('scale: ',scale)
     # noise term prevents the zero division
-    return numerator / (denominator + 1e-7)
+    return data / scale
 
 with tf.device('/cpu:0'):
 
@@ -35,7 +36,7 @@ with tf.device('/cpu:0'):
     cost = tf.reduce_mean(tf.square(hypothesis - Y))
 
     # # Minimize
-    optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.1e-5)
+    optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.1e-4)
     train = optimizer.minimize(cost)
 
     # Launch the graph in a session.
@@ -45,7 +46,7 @@ with tf.device('/cpu:0'):
     step=0
     while(True):
         step=step+1
-        cost_val,W_val,B_val,_= sess.run([cost,W,b,train], feed_dict={X: x_data, Y: y_data})
+        cost_val,W_val,B_val,H_val,_= sess.run([cost,W,b,hypothesis,train], feed_dict={X: x_data, Y: y_data})
         if step % 2000 == 0:
             step=0            
             print("Cost: ", cost_val)
