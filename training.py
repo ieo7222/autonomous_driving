@@ -1,10 +1,20 @@
 import tensorflow as tf
 import numpy as np
+
+def MinMaxScaler(data):
+    numerator = data - np.min(data, 0)
+    denominator = np.max(data, 0) - np.min(data, 0)
+    # noise term prevents the zero division
+    return numerator / (denominator + 1e-7)
+
 with tf.device('/cpu:0'):
+
     xy = np.loadtxt('dataSET1.csv', delimiter=',', dtype=np.float32)
+    xy = MinMaxScaler(xy)
     x_data = xy[0:4500, 1:-2]
     y_data = xy[0:4500, -2:]
 
+    
     # Make sure the shape and data are OK
     # print(x_data.shape, x_data, len(x_data))
     # print(y_data.shape, y_data)
@@ -13,13 +23,8 @@ with tf.device('/cpu:0'):
     X = tf.placeholder(tf.float32, shape=[None, 5]) #3:input개수 
     Y = tf.placeholder(tf.float32, shape=[None, 2]) #1:output개수
 
-    W = tf.Variable(
-[[  15.295133,  -107.41519  ],
- [  -7.117806,   -11.16824  ],
- [  54.396526,   108.938995 ],
- [   2.9447942,   -1.3366497],
- [   5.2830844,   10.336983 ]], name='weight')
-    b = tf.Variable( [5902.659 ,8192.   ], name='bias')
+    W = tf.Variable(tf.random_normal([5,2]), name='weight')
+    b = tf.Variable(tf.random_normal([2]),name='bias')
 
     # # Hypothesis
 
@@ -30,7 +35,7 @@ with tf.device('/cpu:0'):
     cost = tf.reduce_mean(tf.square(hypothesis - Y))
 
     # # Minimize
-    optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.000003)
+    optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.1e-5)
     train = optimizer.minimize(cost)
 
     # Launch the graph in a session.
@@ -41,8 +46,6 @@ with tf.device('/cpu:0'):
     while(True):
         step=step+1
         cost_val,W_val,B_val,_= sess.run([cost,W,b,train], feed_dict={X: x_data, Y: y_data})
-        if cost_val<50:
-            break
         if step % 2000 == 0:
             step=0            
             print("Cost: ", cost_val)
